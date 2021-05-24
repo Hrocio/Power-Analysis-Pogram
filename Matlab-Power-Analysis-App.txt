@@ -1,0 +1,1439 @@
+classdef PoweTestReport < matlab.apps.AppBase
+
+    % Properties that correspond to app components
+    properties (Access = public)
+        PASSCALPowerTestReport          matlab.ui.Figure
+        UIAxes                          matlab.ui.control.UIAxes
+        RequiredDUTMetadataLabel        matlab.ui.control.Label
+        RequredTestMetadataLabel        matlab.ui.control.Label
+        DUTnameEditFieldLabel           matlab.ui.control.Label
+        DUTnameEditField                matlab.ui.control.EditField
+        DUTserialEditFieldLabel         matlab.ui.control.Label
+        DUTserialEditField              matlab.ui.control.EditField
+        DUTbarcodeEditFieldLabel        matlab.ui.control.Label
+        DUTbarcodeEditField             matlab.ui.control.EditField
+        ConfigurationofsensorinputsEditFieldLabel  matlab.ui.control.Label
+        ConfigurationofsensorinputsEditField  matlab.ui.control.EditField
+        SampleratesofDUTEditFieldLabel  matlab.ui.control.Label
+        SampleratesofDUTEditField       matlab.ui.control.EditField
+        GainsettingsofDUTEditFieldLabel  matlab.ui.control.Label
+        GainsettingsofDUTEditField      matlab.ui.control.EditField
+        GPSconfigurationofDUTEditFieldLabel  matlab.ui.control.Label
+        GPSconfigurationofDUTEditField  matlab.ui.control.EditField
+        GPSanttennatypeEditFieldLabel   matlab.ui.control.Label
+        GPSanttennatypeEditField        matlab.ui.control.EditField
+        FlashmemorytypeEditFieldLabel   matlab.ui.control.Label
+        FlashmemorytypeEditField        matlab.ui.control.EditField
+        FlashmemorybarcodeEditFieldLabel  matlab.ui.control.Label
+        FlashmemorybarcodeEditField     matlab.ui.control.EditField
+        DataarchivesettingsEditFieldLabel  matlab.ui.control.Label
+        DataarchivesettingsEditField    matlab.ui.control.EditField
+        PowermeterchassisEditFieldLabel  matlab.ui.control.Label
+        PowermeterchassisEditField      matlab.ui.control.EditField
+        OutputvoltageEditFieldLabel     matlab.ui.control.Label
+        OutputvoltageEditField          matlab.ui.control.EditField
+        CurrentlimitEditFieldLabel      matlab.ui.control.Label
+        CurrentlimitEditField           matlab.ui.control.EditField
+        SamplerateEditFieldLabel        matlab.ui.control.Label
+        SamplerateEditField             matlab.ui.control.EditField
+        DurationinhoursEditFieldLabel   matlab.ui.control.Label
+        DurationinhoursEditField        matlab.ui.control.EditField
+        ParametersrecordedEditFieldLabel  matlab.ui.control.Label
+        ParametersrecordedEditField     matlab.ui.control.EditField
+        DatafilenameEditFieldLabel      matlab.ui.control.Label
+        DatafilenameEditField           matlab.ui.control.EditField
+        TestsstarttimeEditField         matlab.ui.control.EditField
+        DatadownloadtimeEditFieldLabel  matlab.ui.control.Label
+        DatadownloadtimeEditField       matlab.ui.control.EditField
+        ImportTestDataButton            matlab.ui.control.Button
+        SaveTestReportButton            matlab.ui.control.Button
+        DUTmetadatanotesTextAreaLabel   matlab.ui.control.Label
+        DUTmetadatanotesTextArea        matlab.ui.control.TextArea
+        TestmetadatanotesTextAreaLabel  matlab.ui.control.Label
+        TestmetadatanotesTextArea       matlab.ui.control.TextArea
+        SaveWindow1Button               matlab.ui.control.Button
+        SaveWindow2Button               matlab.ui.control.Button
+        SaveWindow3Button               matlab.ui.control.Button
+        SaveWindow4Button               matlab.ui.control.Button
+        PlotPowerTestDataButton         matlab.ui.control.Button
+    end
+
+    
+    properties (Access = private)
+          data;
+            
+            formatSpec;
+            N;
+            text1;
+            text2;
+            text3;
+            text4;
+            text5;
+            text6;
+            text7;
+            
+            %Extract meta data
+            meta_data1;
+            meta_data2;
+            meta_data3;
+            meta_data4 ;
+            
+            %Separate numbers from meta data
+            extract_meta_data2;
+            
+            Sample_Rate;  
+            Sam;
+
+            samp_data;
+            col_data ;
+            size_col;
+            Duration; % in hours
+            t; %Colum 1, time
+            time;
+            A; %Colum 2, current
+            V; %Colum 3, voltage
+            P ; %Colum 2 multiplied by colum 3 to get power
+            %Calculate min, ave, and max
+            minI;
+            maxI;
+            minV;
+            maxV;
+            minP;
+            maxP;
+            aveP;
+            %windows
+            img1;
+            img2;
+            img3;
+            img4;
+            %Cell  variables
+            DUTnam; 
+            DUTsernum;
+            DUTBar; 
+            Configurationsein; 	
+            SamplerDUT; 
+            GainsDUT; 
+            GPSconfigDUT; 			
+            GPSantt; 
+            Dataarchsett; 			
+            Flashmemtype; 
+            Flashmembarcode; 			
+            DUTmetnotes; 
+            Outputvolt; 
+            Currentlim;
+            Paramesrec; 
+            Datafilnam; 
+            Datadowntim;
+            Testmetnotes; 
+            xlimits1;
+            ylimits1;
+            xlimits2;
+            ylimits2;
+            xlimits3;
+            ylimits3;
+            xlimits4;
+            ylimits4;
+            ax;
+            fig1;
+            fig2;
+            fig3;
+            fig4;
+            sam;
+            duration;
+            
+            
+             
+            Desx = 'Xaxis size: ';
+            Desy = 'Yaxis size: ';
+            f1;
+            f2;
+            f3;
+            f4;
+            Sheet2;
+            Sheet3;
+            Sheet4;
+            Sheet5;
+
+            
+            MaxI1;
+            MinP1;
+            MaxP1;
+            AveP1;
+            MaxI2;
+            MinP2;
+            MaxP2;
+            AveP2;
+            MaxI3;
+            MinP3;
+            MaxP3;
+            AveP3;
+            MaxI4;
+            MinP4;
+            MaxP4;
+            AveP4;
+            testime;
+    end
+    
+    
+    
+
+    % Callbacks that handle component events
+    methods (Access = private)
+
+        % Button pushed function: ImportTestDataButton
+        function ImportTestDataButtonPushed(app, event)
+            cla(app.UIAxes) 
+            app.PowermeterchassisEditField.Value = '';
+            app.SamplerateEditField.Value = '';
+            app.DurationinhoursEditField.Value = '';
+            app.TestsstarttimeEditField.Value = '';
+            app.DUTnameEditField.Value = '';
+            app.DUTserialEditField.Value = '';
+            app.DUTbarcodeEditField.Value = '';
+            app.ConfigurationofsensorinputsEditField.Value = '';
+            app.SampleratesofDUTEditField.Value = '';
+            app.GainsettingsofDUTEditField.Value = '';
+            app.GPSconfigurationofDUTEditField.Value = '';
+            app.GPSanttennatypeEditField.Value = '';
+            app.DataarchivesettingsEditField.Value = '';
+            app.FlashmemorytypeEditField.Value = '';
+            app.FlashmemorybarcodeEditField.Value = '';
+            app.DUTmetadatanotesTextArea.Value = '';
+            app.OutputvoltageEditField.Value = '';
+            app.CurrentlimitEditField.Value = '';
+            app.ParametersrecordedEditField.Value = '';
+            app.DatafilenameEditField.Value = '';
+            app.DatadownloadtimeEditField.Value = '';
+            app.TestmetadatanotesTextArea.Value = '';
+            delete(app.img1)
+            delete(app.img2)
+            delete(app.img3)
+            delete(app.img4)
+            app.xlimits1 = '';
+            app.xlimits2 = '';
+            app.xlimits3 = '';
+            app.xlimits4 = '';
+            app.ylimits1 = '';
+            app.ylimits2 = '';
+            app.ylimits3 = '';
+            app.ylimits4 = '';
+
+            %Read data from test
+            [file,path] = uigetfile({'*.csv'; '*.xlsx';'*.txt'; '*.cir'});
+            if isequal(file,0)
+                disp('User selected Cancel');
+            else
+                disp(['User selected ', fullfile(path,file)]);
+            
+            
+            app.data = fopen(file, 'r');
+            
+            app.formatSpec = '%s';
+            app.N = 4;
+            app.text1 = textscan(app.data, app.formatSpec, app.N, 'Delimiter', ',');
+            app.text2 = textscan(app.data, app.formatSpec, app.N, 'Delimiter', ',');
+            app.text3 = textscan(app.data, app.formatSpec, app.N, 'Delimiter', ',');
+            app.text4 = textscan(app.data, app.formatSpec, app.N, 'Delimiter', ',');
+            app.text5 = textscan(app.data, app.formatSpec, app.N, 'Delimiter', ',');
+            app.text6 = textscan(app.data, app.formatSpec, app.N, 'Delimiter', ',');
+            app.text7 = textscan(app.data, app.formatSpec, app.N, 'Delimiter', ',');
+            
+            %Extract meta data
+            app.meta_data1 = app.text1{1}(1:1,:);
+            app.meta_data2 = app.text1{1}(2:2,:);
+            app.meta_data3 = app.text1{1}(3:3,:);
+            app.meta_data4 = app.text1{1}{4:4,:};
+            
+            %Separate numbers from meta data
+            app.extract_meta_data2 = string(app.meta_data2);
+            
+            app.Sample_Rate = sscanf(app.extract_meta_data2, '"Sample interval:%f64"');  
+            app.Sam = 1./app.Sample_Rate;
+            app.sam = round(app.Sam, 1,"significant");
+            app.samp_data =  textscan(app.data, '%f%f%f', 'delimiter', ',');
+            app.col_data = [app.samp_data{1} app.samp_data{2} app.samp_data{3}];
+            app.size_col = length(app.col_data(:,1) );
+            
+            app.Duration = ((app.size_col*app.Sample_Rate)/3600); % in hours
+            app.duration = round(app.Duration, 3, "decimals");
+            
+            app.PowermeterchassisEditField.Value = num2str(string(app.meta_data1));
+            app.SamplerateEditField.Value = num2str(num2str(app.Sample_Rate));
+            app.DurationinhoursEditField.Value = num2str(num2str(app.duration));
+            app.TestsstarttimeEditField.Value = num2str(string(app.meta_data4));
+            
+
+            end
+            
+            
+        end
+
+        % Button pushed function: plotButton
+        function plotButtonPushed(app, event)
+%          
+        
+        end
+
+        % Button pushed function: SaveTestReportButton
+        function SaveTestReportButtonPushed(app, event)
+%               
+            app.meta_data1 = string(num2str(app.PowermeterchassisEditField.Value));
+            app.Sample_Rate = num2str(num2str(app.SamplerateEditField.Value));
+            app.Duration = num2str(num2str(app.DurationinhoursEditField.Value));
+            app.meta_data4 = string(num2str(app.TestsstarttimeEditField.Value));
+            Date = datestr(now);
+            app.DUTnam = string(num2str(app.DUTnameEditField.Value));
+            app.DUTsernum = string(num2str(app.DUTserialEditField.Value));
+            app.DUTBar = string(num2str(app.DUTbarcodeEditField.Value));
+            app.Configurationsein = string(num2str(app.ConfigurationofsensorinputsEditField.Value));
+            app.SamplerDUT = string(num2str(app.SampleratesofDUTEditField.Value));
+            app.GainsDUT = string(num2str(app.GainsettingsofDUTEditField.Value));
+            app.GPSconfigDUT =string(num2str(app.GPSconfigurationofDUTEditField.Value));
+            app.GPSantt = string(num2str(app.GPSanttennatypeEditField.Value));
+            app.Dataarchsett = string(num2str(app.DataarchivesettingsEditField.Value));
+            app.Flashmemtype = string(num2str(app.FlashmemorytypeEditField.Value));
+            app.Flashmembarcode = string(num2str(app.FlashmemorybarcodeEditField.Value));
+            app.DUTmetnotes = string(string(app.DUTmetadatanotesTextArea.Value));
+            app.Outputvolt = string(num2str(app.OutputvoltageEditField.Value));
+            app.Currentlim = string(num2str(app.CurrentlimitEditField.Value));
+            app.Paramesrec = string(num2str(app.ParametersrecordedEditField.Value));
+            app.Datafilnam = string(num2str(app.DatafilenameEditField.Value));
+            app.Datadowntim = string(num2str(app.DatadownloadtimeEditField.Value));
+            app.Testmetnotes = string(string(app.TestmetadatanotesTextArea.Value));
+            
+              
+            %Create a Results templete
+            fileName = 'C:\Users\Hilda Martin\Documents\MATLAB\PASSCALPowerTestMATLABApp\DataResults.xlsx';
+            fileName_template =('C:\Users\Hilda Martin\Documents\MATLAB\PASSCALPowerTestMATLABApp\Power_Cons_Temp.xlsx');
+            copyfile(fileName_template,fileName);
+   
+
+            
+            
+            %Create a server
+            Excel = actxserver('Excel.Application');
+            Workbooks = Excel.Workbooks;
+            % Make Excel visible
+            Excel.Visible = 1;
+            % Open Excel file
+            Workbook = Workbooks.Open(fileName);
+            
+            % populate excel sheet cells with data
+            
+            sheetnum=1;
+            
+            range = 'D8:D8';
+            Sheets = Excel.ActiveWorkBook.Sheets;
+            sheet1 = get(Sheets, 'Item', sheetnum);
+            invoke(sheet1, 'Activate');
+            Activesheet = Excel.Activesheet;
+            % Put MATLAB data into Excel
+            ActivesheetRange = get(Activesheet,'Range',range);
+            set(ActivesheetRange, 'Value',app.meta_data1);
+            
+            range = 'D11:D11';
+            Sheets = Excel.ActiveWorkBook.Sheets;
+            sheet1 = get(Sheets, 'Item', sheetnum);
+            invoke(sheet1, 'Activate');
+            Activesheet = Excel.Activesheet;
+            % Put MATLAB data into Excel
+            ActivesheetRange = get(Activesheet,'Range',range);
+            set(ActivesheetRange, 'Value', app.sam);
+            
+            range = 'D12:D12';
+            Sheets = Excel.ActiveWorkBook.Sheets;
+            sheet1 = get(Sheets, 'Item', sheetnum);
+            invoke(sheet1, 'Activate');
+            Activesheet = Excel.Activesheet;
+            % Put MATLAB data into Excel
+            ActivesheetRange = get(Activesheet,'Range',range);
+            set(ActivesheetRange, 'Value', app.duration);
+            
+            range = 'D15:D15';
+            Sheets = Excel.ActiveWorkBook.Sheets;
+            sheet1 = get(Sheets, 'Item', sheetnum);
+            invoke(sheet1, 'Activate');
+            Activesheet = Excel.Activesheet;
+            % Put MATLAB data into Excel
+            ActivesheetRange = get(Activesheet,'Range',range);
+            set(ActivesheetRange, 'Value', app.meta_data4);
+            
+            range = 'C3:C3';
+            Sheets = Excel.ActiveWorkBook.Sheets;
+            sheet1 = get(Sheets, 'Item', sheetnum);
+            invoke(sheet1, 'Activate');
+            Activesheet = Excel.Activesheet;
+            % Put MATLAB data into Excel
+            ActivesheetRange = get(Activesheet,'Range',range);
+            set(ActivesheetRange, 'Value', Date);
+            
+            
+            range = 'B8:B8';
+            Sheets = Excel.ActiveWorkBook.Sheets;
+            sheet1 = get(Sheets, 'Item', sheetnum);
+            invoke(sheet1, 'Activate');
+            Activesheet = Excel.Activesheet;
+            % Put MATLAB data into Excel
+            ActivesheetRange = get(Activesheet,'Range',range);
+            set(ActivesheetRange, 'Value', app.DUTnam );
+            
+            range = 'B9:B9';
+            Sheets = Excel.ActiveWorkBook.Sheets;
+            sheet1 = get(Sheets, 'Item', sheetnum);
+            invoke(sheet1, 'Activate');
+            Activesheet = Excel.Activesheet;
+            % Put MATLAB data into Excel
+            ActivesheetRange = get(Activesheet,'Range',range);
+            set(ActivesheetRange, 'Value', app.DUTsernum);
+            
+            
+            range = 'B10:B10';
+            Sheets = Excel.ActiveWorkBook.Sheets;
+            sheet1 = get(Sheets, 'Item', sheetnum);
+            invoke(sheet1, 'Activate');
+            Activesheet = Excel.Activesheet;
+            % Put MATLAB data into Excel
+            ActivesheetRange = get(Activesheet,'Range',range);
+            set(ActivesheetRange, 'Value', app.DUTBar);
+            
+            
+            range = 'B11:B11';
+            Sheets = Excel.ActiveWorkBook.Sheets;
+            sheet1 = get(Sheets, 'Item', sheetnum);
+            invoke(sheet1, 'Activate');
+            Activesheet = Excel.Activesheet;
+            % Put MATLAB data into Excel
+            ActivesheetRange = get(Activesheet,'Range',range);
+            set(ActivesheetRange, 'Value', app.Configurationsein);
+            
+            
+            range = 'B12:B12';
+            Sheets = Excel.ActiveWorkBook.Sheets;
+            sheet1 = get(Sheets, 'Item', sheetnum);
+            invoke(sheet1, 'Activate');
+            Activesheet = Excel.Activesheet;
+            % Put MATLAB data into Excel
+            ActivesheetRange = get(Activesheet,'Range',range);
+            set(ActivesheetRange, 'Value', app.SamplerDUT);
+            
+            range = 'B13:B13';
+            Sheets = Excel.ActiveWorkBook.Sheets;
+            sheet1 = get(Sheets, 'Item', sheetnum);
+            invoke(sheet1, 'Activate');
+            Activesheet = Excel.Activesheet;
+            % Put MATLAB data into Excel
+            ActivesheetRange = get(Activesheet,'Range',range);
+            set(ActivesheetRange, 'Value', app.GainsDUT);
+            
+            
+            range = 'B14:B14';
+            Sheets = Excel.ActiveWorkBook.Sheets;
+            sheet1 = get(Sheets, 'Item', sheetnum);
+            invoke(sheet1, 'Activate');
+            Activesheet = Excel.Activesheet;
+            % Put MATLAB data into Excel
+            ActivesheetRange = get(Activesheet,'Range',range);
+            set(ActivesheetRange, 'Value', app.GPSconfigDUT);
+            
+            
+            
+            range = 'B15:B15';
+            Sheets = Excel.ActiveWorkBook.Sheets;
+            sheet1 = get(Sheets, 'Item', sheetnum);
+            invoke(sheet1, 'Activate');
+            Activesheet = Excel.Activesheet;
+            % Put MATLAB data into Excel
+            ActivesheetRange = get(Activesheet,'Range',range);
+            set(ActivesheetRange, 'Value', app.GPSantt);
+            
+            
+            
+            range = 'B16:B16';
+            Sheets = Excel.ActiveWorkBook.Sheets;
+            sheet1 = get(Sheets, 'Item', sheetnum);
+            invoke(sheet1, 'Activate');
+            Activesheet = Excel.Activesheet;
+            % Put MATLAB data into Excel
+            ActivesheetRange = get(Activesheet,'Range',range);
+            set(ActivesheetRange, 'Value', app.Dataarchsett);
+            
+             
+            range = 'B17:B17';
+            Sheets = Excel.ActiveWorkBook.Sheets;
+            sheet1 = get(Sheets, 'Item', sheetnum);
+            invoke(sheet1, 'Activate');
+            Activesheet = Excel.Activesheet;
+            ActivesheetRange = get(Activesheet,'Range',range);
+            set(ActivesheetRange, 'Value', app.Flashmemtype);
+            
+            range = 'B18:B18';
+            Sheets = Excel.ActiveWorkBook.Sheets;
+            sheet1 = get(Sheets, 'Item', sheetnum);
+            invoke(sheet1, 'Activate');
+            Activesheet = Excel.Activesheet;
+            % Put MATLAB data into Excel
+            ActivesheetRange = get(Activesheet,'Range',range);
+            set(ActivesheetRange, 'Value', app.Flashmembarcode);
+             
+            range = 'A20:B23';
+            Sheets = Excel.ActiveWorkBook.Sheets;
+            sheet1 = get(Sheets, 'Item', sheetnum);
+            invoke(sheet1, 'Activate');
+            Activesheet = Excel.Activesheet;
+            % Put MATLAB data into Excel
+            ActivesheetRange = get(Activesheet,'Range',range);
+            set(ActivesheetRange, 'Value', app.DUTmetnotes);
+            
+            
+            range = 'D9:D9';
+            Sheets = Excel.ActiveWorkBook.Sheets;
+            sheet1 = get(Sheets, 'Item', sheetnum);
+            invoke(sheet1, 'Activate');
+            Activesheet = Excel.Activesheet;
+            % Put MATLAB data into Excel
+            ActivesheetRange = get(Activesheet,'Range',range);
+            set(ActivesheetRange, 'Value', app.Outputvolt);
+            
+            range = 'D10:D10';
+            Sheets = Excel.ActiveWorkBook.Sheets;
+            sheet1 = get(Sheets, 'Item', sheetnum);
+            invoke(sheet1, 'Activate');
+            Activesheet = Excel.Activesheet;
+            % Put MATLAB data into Excel
+            ActivesheetRange = get(Activesheet,'Range',range);
+            set(ActivesheetRange, 'Value', app.Currentlim);
+            
+            range = 'D13:D13';
+            Sheets = Excel.ActiveWorkBook.Sheets;
+            sheet1 = get(Sheets, 'Item', sheetnum);
+            invoke(sheet1, 'Activate');
+            Activesheet = Excel.Activesheet;
+            % Put MATLAB data into Excel
+            ActivesheetRange = get(Activesheet,'Range',range);
+            set(ActivesheetRange, 'Value', app.Paramesrec);
+            
+            range = 'D14:D14';
+            Sheets = Excel.ActiveWorkBook.Sheets;
+            sheet1 = get(Sheets, 'Item', sheetnum);
+            invoke(sheet1, 'Activate');
+            Activesheet = Excel.Activesheet;
+            % Put MATLAB data into Excel
+            ActivesheetRange = get(Activesheet,'Range',range);
+            set(ActivesheetRange, 'Value', app.Datafilnam);
+            
+            range = 'D16:D16';
+            Sheets = Excel.ActiveWorkBook.Sheets;
+            sheet1 = get(Sheets, 'Item', sheetnum);
+            invoke(sheet1, 'Activate');
+            Activesheet = Excel.Activesheet;
+            % Put MATLAB data into Excel
+            ActivesheetRange = get(Activesheet,'Range',range);
+            set(ActivesheetRange, 'Value', app.Datadowntim);
+            
+            range = 'C20:D23';
+            Sheets = Excel.ActiveWorkBook.Sheets;
+            sheet1 = get(Sheets, 'Item', sheetnum);
+            invoke(sheet1, 'Activate');
+            Activesheet = Excel.Activesheet;
+            % Put MATLAB data into Excel
+            ActivesheetRange = get(Activesheet,'Range',range);
+            set(ActivesheetRange, 'Value', app.Testmetnotes);
+            
+            range = 'B30:B30';
+            Sheets = Excel.ActiveWorkBook.Sheets;
+            sheet1 = get(Sheets, 'Item', sheetnum);
+            invoke(sheet1, 'Activate');
+            Activesheet = Excel.Activesheet;
+            % Put MATLAB data into Excel
+            ActivesheetRange = get(Activesheet,'Range',range);
+            set(ActivesheetRange, 'Value', app.AveP1);
+            
+            range = 'B31:B31';
+            Sheets = Excel.ActiveWorkBook.Sheets;
+            sheet1 = get(Sheets, 'Item', sheetnum);
+            invoke(sheet1, 'Activate');
+            Activesheet = Excel.Activesheet;
+            % Put MATLAB data into Excel
+            ActivesheetRange = get(Activesheet,'Range',range);
+            set(ActivesheetRange, 'Value', app.MaxP1);
+            
+            range = 'B32:B32';
+            Sheets = Excel.ActiveWorkBook.Sheets;
+            sheet1 = get(Sheets, 'Item', sheetnum);
+            invoke(sheet1, 'Activate');
+            Activesheet = Excel.Activesheet;
+            % Put MATLAB data into Excel
+            ActivesheetRange = get(Activesheet,'Range',range);
+            set(ActivesheetRange, 'Value', app.MinP1);
+            
+            range = 'B33:B33';
+            Sheets = Excel.ActiveWorkBook.Sheets;
+            sheet1 = get(Sheets, 'Item', sheetnum);
+            invoke(sheet1, 'Activate');
+            Activesheet = Excel.Activesheet;
+            % Put MATLAB data into Excel
+            ActivesheetRange = get(Activesheet,'Range',range);
+            set(ActivesheetRange, 'Value', app.MaxI1);
+            
+            range = 'D30:D30';
+            Sheets = Excel.ActiveWorkBook.Sheets;
+            sheet1 = get(Sheets, 'Item', sheetnum);
+            invoke(sheet1, 'Activate');
+            Activesheet = Excel.Activesheet;
+            % Put MATLAB data into Excel
+            ActivesheetRange = get(Activesheet,'Range',range);
+            set(ActivesheetRange, 'Value', app.AveP2);
+            
+            range = 'D31:D31';
+            Sheets = Excel.ActiveWorkBook.Sheets;
+            sheet1 = get(Sheets, 'Item', sheetnum);
+            invoke(sheet1, 'Activate');
+            Activesheet = Excel.Activesheet;
+            % Put MATLAB data into Excel
+            ActivesheetRange = get(Activesheet,'Range',range);
+            set(ActivesheetRange, 'Value', app.MaxP2);
+            
+            range = 'D32:D32';
+            Sheets = Excel.ActiveWorkBook.Sheets;
+            sheet1 = get(Sheets, 'Item', sheetnum);
+            invoke(sheet1, 'Activate');
+            Activesheet = Excel.Activesheet;
+            % Put MATLAB data into Excel
+            ActivesheetRange = get(Activesheet,'Range',range);
+            set(ActivesheetRange, 'Value', app.MinP2);
+            
+            range = 'D33:D33';
+            Sheets = Excel.ActiveWorkBook.Sheets;
+            sheet1 = get(Sheets, 'Item', sheetnum);
+            invoke(sheet1, 'Activate');
+            Activesheet = Excel.Activesheet;
+            % Put MATLAB data into Excel
+            ActivesheetRange = get(Activesheet,'Range',range);
+            set(ActivesheetRange, 'Value', app.MaxI2);
+            
+            range = 'B40:B40';
+            Sheets = Excel.ActiveWorkBook.Sheets;
+            sheet1 = get(Sheets, 'Item', sheetnum);
+            invoke(sheet1, 'Activate');
+            Activesheet = Excel.Activesheet;
+            % Put MATLAB data into Excel
+            ActivesheetRange = get(Activesheet,'Range',range);
+            set(ActivesheetRange, 'Value', app.AveP3);
+            
+            range = 'B41:B41';
+            Sheets = Excel.ActiveWorkBook.Sheets;
+            sheet1 = get(Sheets, 'Item', sheetnum);
+            invoke(sheet1, 'Activate');
+            Activesheet = Excel.Activesheet;
+            % Put MATLAB data into Excel
+            ActivesheetRange = get(Activesheet,'Range',range);
+            set(ActivesheetRange, 'Value', app.MaxP3);
+            
+            range = 'B42:B42';
+            Sheets = Excel.ActiveWorkBook.Sheets;
+            sheet1 = get(Sheets, 'Item', sheetnum);
+            invoke(sheet1, 'Activate');
+            Activesheet = Excel.Activesheet;
+            % Put MATLAB data into Excel
+            ActivesheetRange = get(Activesheet,'Range',range);
+            set(ActivesheetRange, 'Value', app.MinP3);
+            
+            range = 'B43:B43';
+            Sheets = Excel.ActiveWorkBook.Sheets;
+            sheet1 = get(Sheets, 'Item', sheetnum);
+            invoke(sheet1, 'Activate');
+            Activesheet = Excel.Activesheet;
+            % Put MATLAB data into Excel
+            ActivesheetRange = get(Activesheet,'Range',range);
+            set(ActivesheetRange, 'Value', app.MaxI3);
+            
+            range = 'D40:D40';
+            Sheets = Excel.ActiveWorkBook.Sheets;
+            sheet1 = get(Sheets, 'Item', sheetnum);
+            invoke(sheet1, 'Activate');
+            Activesheet = Excel.Activesheet;
+            % Put MATLAB data into Excel
+            ActivesheetRange = get(Activesheet,'Range',range);
+            set(ActivesheetRange, 'Value', app.AveP4);
+            
+            range = 'D41:D41';
+            Sheets = Excel.ActiveWorkBook.Sheets;
+            sheet1 = get(Sheets, 'Item', sheetnum);
+            invoke(sheet1, 'Activate');
+            Activesheet = Excel.Activesheet;
+            % Put MATLAB data into Excel
+            ActivesheetRange = get(Activesheet,'Range',range);
+            set(ActivesheetRange, 'Value', app.MaxP4);
+            
+            range = 'D42:D42';
+            Sheets = Excel.ActiveWorkBook.Sheets;
+            sheet1 = get(Sheets, 'Item', sheetnum);
+            invoke(sheet1, 'Activate');
+            Activesheet = Excel.Activesheet;
+            % Put MATLAB data into Excel
+            ActivesheetRange = get(Activesheet,'Range',range);
+            set(ActivesheetRange, 'Value', app.MinP4);
+            
+            range = 'D43:D43';
+            Sheets = Excel.ActiveWorkBook.Sheets;
+            sheet1 = get(Sheets, 'Item', sheetnum);
+            invoke(sheet1, 'Activate');
+            Activesheet = Excel.Activesheet;
+            % Put MATLAB data into Excel
+            ActivesheetRange = get(Activesheet,'Range',range);
+            set(ActivesheetRange, 'Value', app.MaxI4);
+            
+            
+            range = 'B27:B27';
+            Sheets = Excel.ActiveWorkBook.Sheets;
+            sheet1 = get(Sheets, 'Item', sheetnum);
+            invoke(sheet1, 'Activate');
+            Activesheet = Excel.Activesheet;
+            ActivesheetRange = get(Activesheet,'Range',range);
+            set(ActivesheetRange, 'Value', app.xlimits1);
+            
+            range = 'B28:B28';
+            Sheets = Excel.ActiveWorkBook.Sheets;
+            sheet1 = get(Sheets, 'Item', sheetnum);
+            invoke(sheet1, 'Activate');
+            Activesheet = Excel.Activesheet;
+            ActivesheetRange = get(Activesheet,'Range',range);
+            set(ActivesheetRange, 'Value', app.ylimits1);
+            
+            range = 'D27:D27';
+            Sheets = Excel.ActiveWorkBook.Sheets;
+            sheet1 = get(Sheets, 'Item', sheetnum);
+            invoke(sheet1, 'Activate');
+            Activesheet = Excel.Activesheet;
+            ActivesheetRange = get(Activesheet,'Range',range);
+            set(ActivesheetRange, 'Value', app.xlimits2);
+            
+            range = 'D28:D28';
+            Sheets = Excel.ActiveWorkBook.Sheets;
+            sheet1 = get(Sheets, 'Item', sheetnum);
+            invoke(sheet1, 'Activate');
+            Activesheet = Excel.Activesheet;
+            ActivesheetRange = get(Activesheet,'Range',range);
+            set(ActivesheetRange, 'Value', app.ylimits2);
+            
+            range = 'B37:B37';
+            Sheets = Excel.ActiveWorkBook.Sheets;
+            sheet1 = get(Sheets, 'Item', sheetnum);
+            invoke(sheet1, 'Activate');
+            Activesheet = Excel.Activesheet;
+            ActivesheetRange = get(Activesheet,'Range',range);
+            set(ActivesheetRange, 'Value', app.xlimits3);
+            
+            range = 'B38:B38';
+            Sheets = Excel.ActiveWorkBook.Sheets;
+            sheet1 = get(Sheets, 'Item', sheetnum);
+            invoke(sheet1, 'Activate');
+            Activesheet = Excel.Activesheet;
+            ActivesheetRange = get(Activesheet,'Range',range);
+            set(ActivesheetRange, 'Value', app.ylimits3);
+            
+            range = 'D37:D37';
+            Sheets = Excel.ActiveWorkBook.Sheets;
+            sheet1 = get(Sheets, 'Item', sheetnum);
+            invoke(sheet1, 'Activate');
+            Activesheet = Excel.Activesheet;        
+            ActivesheetRange = get(Activesheet,'Range',range);
+            set(ActivesheetRange, 'Value', app.xlimits4);
+            
+            range = 'D38:D38';
+            Sheets = Excel.ActiveWorkBook.Sheets;
+            sheet1 = get(Sheets, 'Item', sheetnum);
+            invoke(sheet1, 'Activate');
+            Activesheet = Excel.Activesheet;
+            ActivesheetRange = get(Activesheet,'Range',range);
+            set(ActivesheetRange, 'Value', app.ylimits4);
+            
+            range = 'A27:A27';
+            Sheets = Excel.ActiveWorkBook.Sheets;
+            sheet1 = get(Sheets, 'Item', sheetnum);
+            invoke(sheet1, 'Activate');
+            Activesheet = Excel.Activesheet;
+            ActivesheetRange = get(Activesheet,'Range',range);
+            set(ActivesheetRange, 'Value', app.Desx);
+            
+            range = 'A28:A28';
+            Sheets = Excel.ActiveWorkBook.Sheets;
+            sheet1 = get(Sheets, 'Item', sheetnum);
+            invoke(sheet1, 'Activate');
+            Activesheet = Excel.Activesheet;
+            ActivesheetRange = get(Activesheet,'Range',range);
+            set(ActivesheetRange, 'Value', app.Desy);
+            
+            range = 'C27:C27';
+            Sheets = Excel.ActiveWorkBook.Sheets;
+            sheet1 = get(Sheets, 'Item', sheetnum);
+            invoke(sheet1, 'Activate');
+            Activesheet = Excel.Activesheet;
+            ActivesheetRange = get(Activesheet,'Range',range);
+            set(ActivesheetRange, 'Value', app.Desx);
+            
+            range = 'C28:C28';
+            Sheets = Excel.ActiveWorkBook.Sheets;
+            sheet1 = get(Sheets, 'Item', sheetnum);
+            invoke(sheet1, 'Activate');
+            Activesheet = Excel.Activesheet;
+            ActivesheetRange = get(Activesheet,'Range',range);
+            set(ActivesheetRange, 'Value', app.Desy);
+            
+            range = 'A37:A37';
+            Sheets = Excel.ActiveWorkBook.Sheets;
+            sheet1 = get(Sheets, 'Item', sheetnum);
+            invoke(sheet1, 'Activate');
+            Activesheet = Excel.Activesheet;
+            ActivesheetRange = get(Activesheet,'Range',range);
+            set(ActivesheetRange, 'Value', app.Desx);
+            
+            range = 'A38:A38';
+            Sheets = Excel.ActiveWorkBook.Sheets;
+            sheet1 = get(Sheets, 'Item', sheetnum);
+            invoke(sheet1, 'Activate');
+            Activesheet = Excel.Activesheet;
+            ActivesheetRange = get(Activesheet,'Range',range);
+            set(ActivesheetRange, 'Value', app.Desy);
+            
+            range = 'C37:C37';
+            Sheets = Excel.ActiveWorkBook.Sheets;
+            sheet1 = get(Sheets, 'Item', sheetnum);
+            invoke(sheet1, 'Activate');
+            Activesheet = Excel.Activesheet;        
+            ActivesheetRange = get(Activesheet,'Range',range);
+            set(ActivesheetRange, 'Value', app.Desx);
+            
+            range = 'c38:c38';
+            Sheets = Excel.ActiveWorkBook.Sheets;
+            sheet1 = get(Sheets, 'Item', sheetnum);
+            invoke(sheet1, 'Activate');
+            Activesheet = Excel.Activesheet;
+            ActivesheetRange = get(Activesheet,'Range',range);
+            set(ActivesheetRange, 'Value', app.Desy);
+            
+            
+            % Add image
+               if isempty(app.img1)
+                 delete(app.Sheet2);
+                 delete(app.img1);
+               else
+                 sheetnum = 2;
+                 Sheets = Excel.ActiveWorkBook.Sheets;
+                 app.Sheet2 = get(Sheets, 'Item', sheetnum);
+                 app.Sheet2.Activate;
+                 Shapes = app.Sheet2.Shapes;
+                 Shapes.AddPicture([pwd '\', app.img1], 0, 1, 55, 120, 375, 275);
+               end
+
+
+                % Add image
+              if isempty(app.img2)
+                delete(app.Sheet3); 
+                delete(app.img2);
+              else   
+                sheetnum = 3;
+                Sheets = Excel.ActiveWorkBook.Sheets;
+                app.Sheet3 = get(Sheets, 'Item', sheetnum);
+                app.Sheet3.Activate;
+                Shapes = app.Sheet3.Shapes;
+                Shapes.AddPicture([pwd '\', app.img2], 0, 1, 55, 120, 375, 275);
+              end 
+              
+              % Add image
+              if isempty(app.img3)
+                delete(app.Sheet4);
+                delete(app.img3);
+              else   
+                sheetnum = 4;
+                Sheets = Excel.ActiveWorkBook.Sheets;
+                app.Sheet4 = get(Sheets, 'Item', sheetnum);
+                app.Sheet4.Activate;
+                Shapes = app.Sheet4.Shapes;
+                Shapes.AddPicture([pwd '\', app.img3], 0, 1, 55, 120, 375, 275);
+              end   
+              
+              
+                % Add image
+              if isempty(app.img4)
+                delete(app.Sheet5);
+                delete(app.img4);
+              else
+                sheetnum = 5;
+                Sheets = Excel.ActiveWorkBook.Sheets;
+                app.Sheet5 = get(Sheets, 'Item', sheetnum);
+                app.Sheet5.Activate;
+                Shapes = app.Sheet5.Shapes;
+                Shapes.AddPicture([pwd '\', app.img4], 0, 1, 55, 120, 375, 275);
+                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% ^  ^  ^   ^    ^    ^
+                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 0 1   x   y    size
+              end
+       
+                 %invoke workbook to save to pdf
+                invoke(Workbook,'Save');
+                Workbook = Excel.Workbooks.Open(sprintf('%s',fileName));
+                % print this book to PDF
+                clear('Workbook');
+                [outfile, path] = uiputfile({'*.pdf'; '*.xlsx'}, 'Save as', 'C:\Users\Hilda Martin\Documents\MATLAB\PDF_folders');
+                
+                   
+                if isequal(outfile,0) || isequal(path,0)
+                   disp('User clicked Cancel.')
+                else
+                   disp(['User selected ',fullfile(path,outfile),...
+                         ' and then clicked Save.'])
+                   Workbook.ExportAsFixedFormat('xlTypePDF', fullfile(path,outfile));
+                   
+                end
+                 
+        
+        end
+
+        % Button pushed function: SaveWindow1Button
+        function SaveWindow1ButtonPushed(app, event)
+            % Create a temporary figure with axes.
+           
+            app.fig1 = figure;
+            app.fig1.Visible = 'off';
+            figAxes = axes(app.fig1);
+            % Copy all UIAxes children, take over axes limits and aspect ratio.            
+            allChildren= app.UIAxes.XAxis.Parent.Children;
+            copyobj(allChildren, figAxes);
+            figAxes.XLim = app.UIAxes.XLim;
+            figAxes.YLim = app.UIAxes.YLim;
+            figAxes.XLabel.String = app.UIAxes.XLabel.String;
+            figAxes.YLabel.String = app.UIAxes.YLabel.String;
+            figAxes.Title.String = app.UIAxes.Title.String;
+            app.xlimits1 = num2str(figAxes.XLim(1,:));
+            app.ylimits1 = num2str(figAxes.YLim(1,:));
+            figAxes.DataAspectRatio = app.UIAxes.DataAspectRatio;
+            a1 =  ceil((figAxes.XLim(:,1) + 0.0070246404)./app.Sample_Rate);
+            b1 = ceil((figAxes.XLim(:,end) - 0.0070246404)./app.Sample_Rate);
+            rangeP = app.P(a1:b1);          
+            rangeI = app.A(a1:b1);
+                   
+            maxI1 = max(rangeI);
+            minP1 = min(rangeP);
+            maxP1 = max(rangeP);
+            aveP1 = mean(rangeP);
+            app.MaxI1 = round(maxI1, 2,"decimals");
+            app.MinP1 = round(minP1, 2,"decimals");
+            app.MaxP1 = round(maxP1, 2,"decimals");
+            app.AveP1 = round(aveP1, 2,"decimals");
+            delete('C:\Users\Hilda Martin\Documents\MATLAB\PASSCALPowerTestMATLABApp/jpg.fig');
+            for K = 1 : length(app.fig1)
+               app.img1 = 'figure1_%02d.jpg';
+               saveas(app.fig1(K), app.img1);
+            end
+            % Delete the temporary figure. 
+            
+            app.f1 = msgbox('Window 1 Saved','Saved');
+            
+        end
+
+        % Button pushed function: SaveWindow2Button
+        function SaveWindow2ButtonPushed(app, event)
+            % Create a temporary figure with axes.
+            
+            app.fig2 = figure;
+            app.fig2.Visible = 'off';
+            figAxes = axes(app.fig2);
+            % Copy all UIAxes children, take over axes limits and aspect ratio.            
+            allChildren = app.UIAxes.XAxis.Parent.Children;
+            copyobj(allChildren, figAxes);
+            figAxes.XLim = app.UIAxes.XLim;
+            figAxes.YLim = app.UIAxes.YLim;
+            figAxes.XLabel.String = app.UIAxes.XLabel.String;
+            figAxes.YLabel.String = app.UIAxes.YLabel.String;
+            figAxes.Title.String = app.UIAxes.Title.String;          
+            app.xlimits2 = num2str( figAxes.XLim(1,:));
+            app.ylimits2 = num2str( figAxes.YLim(1,:));
+            figAxes.DataAspectRatio = app.UIAxes.DataAspectRatio;
+            a2 =  floor((figAxes.XLim(:,1) + 0.0070246404)./app.Sample_Rate);
+            b2 = ceil((figAxes.XLim(:,end) - 0.0070246404)./app.Sample_Rate);
+            rangeP = app.P(a2:b2);          
+            rangeI = app.A(a2:b2);
+                   
+            maxI2 = max(rangeI);
+            minP2 = min(rangeP);
+            maxP2 = max(rangeP);
+            aveP2 = mean(rangeP);
+            app.MaxI2 = round(maxI2, 2,"decimals");
+            app.MinP2 = round(minP2, 2,"decimals");
+            app.MaxP2 = round(maxP2, 2,"decimals");
+            app.AveP2 = round(aveP2, 2,"decimals");
+            delete('C:\Users\Hilda Martin\Documents\MATLAB\PASSCALPowerTestMATLABApp/jpg.fig');
+            for K = 1 : length(app.fig2)
+               app.img2 = 'figure2_%02d.jpg';
+               saveas(app.fig2(K), app.img2);
+            end
+            % Delete the temporary figure. 
+            
+            app.f2 = msgbox('Window 2 Saved','Saved');
+            
+        end
+
+        % Button pushed function: SaveWindow3Button
+        function SaveWindow3ButtonPushed(app, event)
+            % Create a temporary figure with axes.
+            
+            app.fig3 = figure;
+            app.fig3.Visible = 'off';
+            figAxes = axes(app.fig3);
+            % Copy all UIAxes children, take over axes limits and aspect ratio.            
+            allChildren = app.UIAxes.XAxis.Parent.Children;
+            copyobj(allChildren, figAxes);
+            figAxes.XLim = app.UIAxes.XLim;
+            figAxes.YLim = app.UIAxes.YLim;
+            figAxes.XLabel.String = app.UIAxes.XLabel.String;
+            figAxes.YLabel.String = app.UIAxes.YLabel.String;
+            figAxes.Title.String = app.UIAxes.Title.String;           
+            app.xlimits3 = num2str( figAxes.XLim(1,:));
+            app.ylimits3 = num2str( figAxes.YLim(1,:));
+            figAxes.DataAspectRatio = app.UIAxes.DataAspectRatio;
+            a3 =  floor((figAxes.XLim(:,1) + 0.0070246404)./app.Sample_Rate);
+            b3 = ceil((figAxes.XLim(:,end) - 0.0070246404)./app.Sample_Rate);
+            rangeP = app.P(a3:b3);          
+            rangeI = app.A(a3:b3);
+                   
+            maxI3 = max(rangeI);
+            minP3 = min(rangeP);
+            maxP3 = max(rangeP);
+            aveP3 = mean(rangeP);
+            app.MaxI3 = round(maxI3, 2,"decimals");
+            app.MinP3 = round(minP3, 2,"decimals");
+            app.MaxP3 = round(maxP3, 2,"decimals");
+            app.AveP3 = round(aveP3, 2,"decimals");
+            delete('C:\Users\Hilda Martin\Documents\MATLAB\PASSCALPowerTestMATLABApp/jpg.fig');
+            for K = 1 : length(app.fig3)
+               app.img3 = 'figure3_%02d.jpg';
+               saveas(app.fig3(K), app.img3);
+            end
+            % Delete the temporary figure. 
+             app.f3 = msgbox('Window 3 Saved','Saved');
+            
+        end
+
+        % Button pushed function: SaveWindow4Button
+        function SaveWindow4ButtonPushed(app, event)
+            % Create a temporary figure with axes.
+            
+            app.fig4 = figure;
+            app.fig4.Visible = 'off';
+            figAxes = axes(app.fig4);
+            % Copy all UIAxes children, take over axes limits and aspect ratio.            
+            allChildren = app.UIAxes.XAxis.Parent.Children;
+            copyobj(allChildren, figAxes)
+            figAxes.XLim = app.UIAxes.XLim;
+            figAxes.YLim = app.UIAxes.YLim;
+            figAxes.XLabel.String = app.UIAxes.XLabel.String;
+            figAxes.YLabel.String = app.UIAxes.YLabel.String;
+            figAxes.Title.String = app.UIAxes.Title.String;
+            app.xlimits4 = num2str( figAxes.XLim(1,:));
+            app.ylimits4 = num2str( figAxes.YLim(1,:));
+            figAxes.DataAspectRatio = app.UIAxes.DataAspectRatio;
+            a4 =  floor((figAxes.XLim(:,1) + 0.0070246404)./app.Sample_Rate);
+            b4 = ceil((figAxes.XLim(:,end) - 0.0070246404)./app.Sample_Rate);
+            rangeP = app.P(a4:b4);          
+            rangeI = app.A(a4:b4);
+                   
+            maxI4 = max(rangeI);
+            minP4 = min(rangeP);
+            maxP4 = max(rangeP);
+            aveP4 = mean(rangeP);
+            app.MaxI4 = round(maxI4, 2,"decimals");
+            app.MinP4 = round(minP4, 2,"decimals");
+            app.MaxP4 = round(maxP4, 2,"decimals");
+            app.AveP4 = round(aveP4, 2,"decimals");
+            delete('C:\Users\Hilda Martin\Documents\MATLAB\PASSCALPowerTestMATLABApp/jpg.fig');
+            for K = 1 : length(app.fig4)
+               app.img4 = 'figure4_%02d.jpg';
+               saveas(app.fig4(K), app.img4);
+            end
+            % Delete the temporary figure. 
+            
+             app.f4 = msgbox('Window 4 Saved','Saved');
+             
+        end
+
+        % Button pushed function: PlotPowerTestDataButton
+        function PlotPowerTestDataButtonPushed(app, event)
+            %Plot
+            app.t = app.col_data(:,1); %Colum 1, time
+            app.time = app.Sample_Rate.*app.t;
+            app.A = app.col_data(:,2); %Colum 2, current
+            app.V = app.col_data(:,3); %Colum 3, voltage
+            app.P = app.col_data(:,2).*app.col_data(:,3); %Colum 2 multiplied by colum 3 to get power
+             
+            %Calculate min and max
+            app.maxI = min(app.A(:));
+            
+            app.minV = min(app.V(:));
+            app.maxV = max(app.V(:));
+            delete(app.img1)
+            delete(app.img2)
+            delete(app.img3)
+            delete(app.img4)
+            app.xlimits1 = '';
+            app.xlimits2 = '';
+            app.xlimits3 = '';
+            app.xlimits4 = '';
+            app.ylimits1 = '';
+            app.ylimits2 = '';
+            app.ylimits3 = '';
+            app.ylimits4 = '';
+            
+            plot(app.UIAxes, app.time, app.P);
+            title(app.UIAxes,'Power');
+            xlabel(app.UIAxes,'Seconds');
+            ylabel(app.UIAxes,'Watts');
+            zoom(app.UIAxes,'on');
+            grid(app.UIAxes,'on');
+             
+            
+        end
+    end
+
+    % Component initialization
+    methods (Access = private)
+
+        % Create UIFigure and components
+        function createComponents(app)
+
+            % Create PASSCALPowerTestReport and hide until all components are created
+            app.PASSCALPowerTestReport = uifigure('Visible', 'off');
+            app.PASSCALPowerTestReport.Position = [100 100 697 854];
+            app.PASSCALPowerTestReport.Name = 'UI Figure';
+            app.PASSCALPowerTestReport.Scrollable = 'on';
+
+            % Create UIAxes
+            app.UIAxes = uiaxes(app.PASSCALPowerTestReport);
+            title(app.UIAxes, 'Power ')
+            xlabel(app.UIAxes, 'X')
+            ylabel(app.UIAxes, 'Y')
+            app.UIAxes.PlotBoxAspectRatio = [2.46875 1 1];
+            app.UIAxes.Position = [25 16 435 290];
+
+            % Create RequiredDUTMetadataLabel
+            app.RequiredDUTMetadataLabel = uilabel(app.PASSCALPowerTestReport);
+            app.RequiredDUTMetadataLabel.FontName = 'Times New Roman';
+            app.RequiredDUTMetadataLabel.FontSize = 20;
+            app.RequiredDUTMetadataLabel.FontWeight = 'bold';
+            app.RequiredDUTMetadataLabel.Position = [70 769 276 25];
+            app.RequiredDUTMetadataLabel.Text = 'Required DUT Metadata';
+
+            % Create RequredTestMetadataLabel
+            app.RequredTestMetadataLabel = uilabel(app.PASSCALPowerTestReport);
+            app.RequredTestMetadataLabel.FontName = 'Times New Roman';
+            app.RequredTestMetadataLabel.FontSize = 20;
+            app.RequredTestMetadataLabel.FontWeight = 'bold';
+            app.RequredTestMetadataLabel.Position = [381 769 260 25];
+            app.RequredTestMetadataLabel.Text = 'Requred Test Metadata';
+
+            % Create DUTnameEditFieldLabel
+            app.DUTnameEditFieldLabel = uilabel(app.PASSCALPowerTestReport);
+            app.DUTnameEditFieldLabel.HorizontalAlignment = 'right';
+            app.DUTnameEditFieldLabel.Position = [134 738 64 22];
+            app.DUTnameEditFieldLabel.Text = 'DUT name';
+
+            % Create DUTnameEditField
+            app.DUTnameEditField = uieditfield(app.PASSCALPowerTestReport, 'text');
+            app.DUTnameEditField.Position = [213 738 123 22];
+
+            % Create DUTserialEditFieldLabel
+            app.DUTserialEditFieldLabel = uilabel(app.PASSCALPowerTestReport);
+            app.DUTserialEditFieldLabel.HorizontalAlignment = 'right';
+            app.DUTserialEditFieldLabel.Position = [126 709 72 22];
+            app.DUTserialEditFieldLabel.Text = 'DUT serial #';
+
+            % Create DUTserialEditField
+            app.DUTserialEditField = uieditfield(app.PASSCALPowerTestReport, 'text');
+            app.DUTserialEditField.Position = [213 709 123 22];
+
+            % Create DUTbarcodeEditFieldLabel
+            app.DUTbarcodeEditFieldLabel = uilabel(app.PASSCALPowerTestReport);
+            app.DUTbarcodeEditFieldLabel.HorizontalAlignment = 'right';
+            app.DUTbarcodeEditFieldLabel.Position = [121 679 77 22];
+            app.DUTbarcodeEditFieldLabel.Text = 'DUT barcode';
+
+            % Create DUTbarcodeEditField
+            app.DUTbarcodeEditField = uieditfield(app.PASSCALPowerTestReport, 'text');
+            app.DUTbarcodeEditField.Position = [213 679 123 22];
+
+            % Create ConfigurationofsensorinputsEditFieldLabel
+            app.ConfigurationofsensorinputsEditFieldLabel = uilabel(app.PASSCALPowerTestReport);
+            app.ConfigurationofsensorinputsEditFieldLabel.HorizontalAlignment = 'right';
+            app.ConfigurationofsensorinputsEditFieldLabel.Position = [33 645 165 31];
+            app.ConfigurationofsensorinputsEditFieldLabel.Text = 'Configuration of sensor inputs';
+
+            % Create ConfigurationofsensorinputsEditField
+            app.ConfigurationofsensorinputsEditField = uieditfield(app.PASSCALPowerTestReport, 'text');
+            app.ConfigurationofsensorinputsEditField.Position = [213 654 123 22];
+
+            % Create SampleratesofDUTEditFieldLabel
+            app.SampleratesofDUTEditFieldLabel = uilabel(app.PASSCALPowerTestReport);
+            app.SampleratesofDUTEditFieldLabel.HorizontalAlignment = 'right';
+            app.SampleratesofDUTEditFieldLabel.Position = [72 624 126 22];
+            app.SampleratesofDUTEditFieldLabel.Text = 'Sample rate(s) of DUT';
+
+            % Create SampleratesofDUTEditField
+            app.SampleratesofDUTEditField = uieditfield(app.PASSCALPowerTestReport, 'text');
+            app.SampleratesofDUTEditField.Position = [213 624 123 22];
+
+            % Create GainsettingsofDUTEditFieldLabel
+            app.GainsettingsofDUTEditFieldLabel = uilabel(app.PASSCALPowerTestReport);
+            app.GainsettingsofDUTEditFieldLabel.HorizontalAlignment = 'right';
+            app.GainsettingsofDUTEditFieldLabel.Position = [81 593 117 22];
+            app.GainsettingsofDUTEditFieldLabel.Text = 'Gain settings of DUT';
+
+            % Create GainsettingsofDUTEditField
+            app.GainsettingsofDUTEditField = uieditfield(app.PASSCALPowerTestReport, 'text');
+            app.GainsettingsofDUTEditField.Position = [213 593 123 22];
+
+            % Create GPSconfigurationofDUTEditFieldLabel
+            app.GPSconfigurationofDUTEditFieldLabel = uilabel(app.PASSCALPowerTestReport);
+            app.GPSconfigurationofDUTEditFieldLabel.HorizontalAlignment = 'right';
+            app.GPSconfigurationofDUTEditFieldLabel.Position = [54 564 144 22];
+            app.GPSconfigurationofDUTEditFieldLabel.Text = 'GPS configuration of DUT';
+
+            % Create GPSconfigurationofDUTEditField
+            app.GPSconfigurationofDUTEditField = uieditfield(app.PASSCALPowerTestReport, 'text');
+            app.GPSconfigurationofDUTEditField.Position = [213 564 123 22];
+
+            % Create GPSanttennatypeEditFieldLabel
+            app.GPSanttennatypeEditFieldLabel = uilabel(app.PASSCALPowerTestReport);
+            app.GPSanttennatypeEditFieldLabel.HorizontalAlignment = 'right';
+            app.GPSanttennatypeEditFieldLabel.Position = [91 533 107 22];
+            app.GPSanttennatypeEditFieldLabel.Text = 'GPS anttenna type';
+
+            % Create GPSanttennatypeEditField
+            app.GPSanttennatypeEditField = uieditfield(app.PASSCALPowerTestReport, 'text');
+            app.GPSanttennatypeEditField.Position = [213 533 123 22];
+
+            % Create FlashmemorytypeEditFieldLabel
+            app.FlashmemorytypeEditFieldLabel = uilabel(app.PASSCALPowerTestReport);
+            app.FlashmemorytypeEditFieldLabel.HorizontalAlignment = 'right';
+            app.FlashmemorytypeEditFieldLabel.Position = [90 471 108 22];
+            app.FlashmemorytypeEditFieldLabel.Text = 'Flash memory type';
+
+            % Create FlashmemorytypeEditField
+            app.FlashmemorytypeEditField = uieditfield(app.PASSCALPowerTestReport, 'text');
+            app.FlashmemorytypeEditField.Position = [213 471 123 22];
+
+            % Create FlashmemorybarcodeEditFieldLabel
+            app.FlashmemorybarcodeEditFieldLabel = uilabel(app.PASSCALPowerTestReport);
+            app.FlashmemorybarcodeEditFieldLabel.HorizontalAlignment = 'right';
+            app.FlashmemorybarcodeEditFieldLabel.Position = [70 441 128 22];
+            app.FlashmemorybarcodeEditFieldLabel.Text = 'Flash memory barcode';
+
+            % Create FlashmemorybarcodeEditField
+            app.FlashmemorybarcodeEditField = uieditfield(app.PASSCALPowerTestReport, 'text');
+            app.FlashmemorybarcodeEditField.Position = [213 441 123 22];
+
+            % Create DataarchivesettingsEditFieldLabel
+            app.DataarchivesettingsEditFieldLabel = uilabel(app.PASSCALPowerTestReport);
+            app.DataarchivesettingsEditFieldLabel.HorizontalAlignment = 'right';
+            app.DataarchivesettingsEditFieldLabel.Position = [80 501 118 22];
+            app.DataarchivesettingsEditFieldLabel.Text = 'Data archive settings';
+
+            % Create DataarchivesettingsEditField
+            app.DataarchivesettingsEditField = uieditfield(app.PASSCALPowerTestReport, 'text');
+            app.DataarchivesettingsEditField.Position = [213 501 123 22];
+
+            % Create PowermeterchassisEditFieldLabel
+            app.PowermeterchassisEditFieldLabel = uilabel(app.PASSCALPowerTestReport);
+            app.PowermeterchassisEditFieldLabel.HorizontalAlignment = 'right';
+            app.PowermeterchassisEditFieldLabel.Position = [369 738 117 22];
+            app.PowermeterchassisEditFieldLabel.Text = 'Power meter chassis';
+
+            % Create PowermeterchassisEditField
+            app.PowermeterchassisEditField = uieditfield(app.PASSCALPowerTestReport, 'text');
+            app.PowermeterchassisEditField.Position = [501 738 152 22];
+
+            % Create OutputvoltageEditFieldLabel
+            app.OutputvoltageEditFieldLabel = uilabel(app.PASSCALPowerTestReport);
+            app.OutputvoltageEditFieldLabel.HorizontalAlignment = 'right';
+            app.OutputvoltageEditFieldLabel.Position = [402 709 84 22];
+            app.OutputvoltageEditFieldLabel.Text = 'Output voltage';
+
+            % Create OutputvoltageEditField
+            app.OutputvoltageEditField = uieditfield(app.PASSCALPowerTestReport, 'text');
+            app.OutputvoltageEditField.Position = [501 709 152 22];
+
+            % Create CurrentlimitEditFieldLabel
+            app.CurrentlimitEditFieldLabel = uilabel(app.PASSCALPowerTestReport);
+            app.CurrentlimitEditFieldLabel.HorizontalAlignment = 'right';
+            app.CurrentlimitEditFieldLabel.Position = [416 679 70 22];
+            app.CurrentlimitEditFieldLabel.Text = 'Current limit';
+
+            % Create CurrentlimitEditField
+            app.CurrentlimitEditField = uieditfield(app.PASSCALPowerTestReport, 'text');
+            app.CurrentlimitEditField.Position = [501 679 152 22];
+
+            % Create SamplerateEditFieldLabel
+            app.SamplerateEditFieldLabel = uilabel(app.PASSCALPowerTestReport);
+            app.SamplerateEditFieldLabel.HorizontalAlignment = 'right';
+            app.SamplerateEditFieldLabel.Position = [416 646 70 22];
+            app.SamplerateEditFieldLabel.Text = 'Sample rate';
+
+            % Create SamplerateEditField
+            app.SamplerateEditField = uieditfield(app.PASSCALPowerTestReport, 'text');
+            app.SamplerateEditField.Position = [501 646 152 22];
+
+            % Create DurationinhoursEditFieldLabel
+            app.DurationinhoursEditFieldLabel = uilabel(app.PASSCALPowerTestReport);
+            app.DurationinhoursEditFieldLabel.HorizontalAlignment = 'right';
+            app.DurationinhoursEditFieldLabel.Position = [389 616 97 22];
+            app.DurationinhoursEditFieldLabel.Text = 'Duration in hours';
+
+            % Create DurationinhoursEditField
+            app.DurationinhoursEditField = uieditfield(app.PASSCALPowerTestReport, 'text');
+            app.DurationinhoursEditField.Position = [501 616 152 22];
+
+            % Create ParametersrecordedEditFieldLabel
+            app.ParametersrecordedEditFieldLabel = uilabel(app.PASSCALPowerTestReport);
+            app.ParametersrecordedEditFieldLabel.HorizontalAlignment = 'right';
+            app.ParametersrecordedEditFieldLabel.Position = [368 585 118 22];
+            app.ParametersrecordedEditFieldLabel.Text = 'Parameters recorded';
+
+            % Create ParametersrecordedEditField
+            app.ParametersrecordedEditField = uieditfield(app.PASSCALPowerTestReport, 'text');
+            app.ParametersrecordedEditField.Position = [501 585 152 22];
+
+            % Create DatafilenameEditFieldLabel
+            app.DatafilenameEditFieldLabel = uilabel(app.PASSCALPowerTestReport);
+            app.DatafilenameEditFieldLabel.HorizontalAlignment = 'right';
+            app.DatafilenameEditFieldLabel.Position = [403 556 83 22];
+            app.DatafilenameEditFieldLabel.Text = 'Data file name';
+
+            % Create DatafilenameEditField
+            app.DatafilenameEditField = uieditfield(app.PASSCALPowerTestReport, 'text');
+            app.DatafilenameEditField.Position = [501 556 152 22];
+
+            % Create TestsstarttimeEditField
+            app.TestsstarttimeEditField = uieditfield(app.PASSCALPowerTestReport, 'text');
+            app.TestsstarttimeEditField.Position = [459 522 194 25];
+
+            % Create DatadownloadtimeEditFieldLabel
+            app.DatadownloadtimeEditFieldLabel = uilabel(app.PASSCALPowerTestReport);
+            app.DatadownloadtimeEditFieldLabel.HorizontalAlignment = 'right';
+            app.DatadownloadtimeEditFieldLabel.Position = [374 493 112 22];
+            app.DatadownloadtimeEditFieldLabel.Text = 'Data download time';
+
+            % Create DatadownloadtimeEditField
+            app.DatadownloadtimeEditField = uieditfield(app.PASSCALPowerTestReport, 'text');
+            app.DatadownloadtimeEditField.Position = [501 493 152 22];
+
+            % Create ImportTestDataButton
+            app.ImportTestDataButton = uibutton(app.PASSCALPowerTestReport, 'push');
+            app.ImportTestDataButton.ButtonPushedFcn = createCallbackFcn(app, @ImportTestDataButtonPushed, true);
+            app.ImportTestDataButton.FontName = 'Times New Roman';
+            app.ImportTestDataButton.FontSize = 20;
+            app.ImportTestDataButton.FontWeight = 'bold';
+            app.ImportTestDataButton.Position = [241 802 163 32];
+            app.ImportTestDataButton.Text = 'Import Test Data';
+
+            % Create SaveTestReportButton
+            app.SaveTestReportButton = uibutton(app.PASSCALPowerTestReport, 'push');
+            app.SaveTestReportButton.ButtonPushedFcn = createCallbackFcn(app, @SaveTestReportButtonPushed, true);
+            app.SaveTestReportButton.FontName = 'Times New Roman';
+            app.SaveTestReportButton.FontSize = 20;
+            app.SaveTestReportButton.FontWeight = 'bold';
+            app.SaveTestReportButton.Position = [479 72 160 32];
+            app.SaveTestReportButton.Text = 'Save Test Report';
+
+            % Create DUTmetadatanotesTextAreaLabel
+            app.DUTmetadatanotesTextAreaLabel = uilabel(app.PASSCALPowerTestReport);
+            app.DUTmetadatanotesTextAreaLabel.HorizontalAlignment = 'right';
+            app.DUTmetadatanotesTextAreaLabel.Position = [17 406 120 22];
+            app.DUTmetadatanotesTextAreaLabel.Text = 'DUT metadata notes:';
+
+            % Create DUTmetadatanotesTextArea
+            app.DUTmetadatanotesTextArea = uitextarea(app.PASSCALPowerTestReport);
+            app.DUTmetadatanotesTextArea.Position = [152 370 184 60];
+
+            % Create TestmetadatanotesTextAreaLabel
+            app.TestmetadatanotesTextAreaLabel = uilabel(app.PASSCALPowerTestReport);
+            app.TestmetadatanotesTextAreaLabel.HorizontalAlignment = 'right';
+            app.TestmetadatanotesTextAreaLabel.Position = [348 406 117 22];
+            app.TestmetadatanotesTextAreaLabel.Text = 'Test metadata notes:';
+
+            % Create TestmetadatanotesTextArea
+            app.TestmetadatanotesTextArea = uitextarea(app.PASSCALPowerTestReport);
+            app.TestmetadatanotesTextArea.Position = [480 370 173 60];
+
+            % Create SaveWindow1Button
+            app.SaveWindow1Button = uibutton(app.PASSCALPowerTestReport, 'push');
+            app.SaveWindow1Button.ButtonPushedFcn = createCallbackFcn(app, @SaveWindow1ButtonPushed, true);
+            app.SaveWindow1Button.FontName = 'Times New Roman';
+            app.SaveWindow1Button.FontSize = 18;
+            app.SaveWindow1Button.FontWeight = 'bold';
+            app.SaveWindow1Button.Position = [492 265 134 29];
+            app.SaveWindow1Button.Text = 'Save Window 1';
+
+            % Create SaveWindow2Button
+            app.SaveWindow2Button = uibutton(app.PASSCALPowerTestReport, 'push');
+            app.SaveWindow2Button.ButtonPushedFcn = createCallbackFcn(app, @SaveWindow2ButtonPushed, true);
+            app.SaveWindow2Button.FontName = 'Times New Roman';
+            app.SaveWindow2Button.FontSize = 18;
+            app.SaveWindow2Button.FontWeight = 'bold';
+            app.SaveWindow2Button.Position = [493 224 134 29];
+            app.SaveWindow2Button.Text = 'Save Window 2';
+
+            % Create SaveWindow3Button
+            app.SaveWindow3Button = uibutton(app.PASSCALPowerTestReport, 'push');
+            app.SaveWindow3Button.ButtonPushedFcn = createCallbackFcn(app, @SaveWindow3ButtonPushed, true);
+            app.SaveWindow3Button.FontName = 'Times New Roman';
+            app.SaveWindow3Button.FontSize = 18;
+            app.SaveWindow3Button.FontWeight = 'bold';
+            app.SaveWindow3Button.Position = [494 176 134 29];
+            app.SaveWindow3Button.Text = 'Save Window 3';
+
+            % Create SaveWindow4Button
+            app.SaveWindow4Button = uibutton(app.PASSCALPowerTestReport, 'push');
+            app.SaveWindow4Button.ButtonPushedFcn = createCallbackFcn(app, @SaveWindow4ButtonPushed, true);
+            app.SaveWindow4Button.FontName = 'Times New Roman';
+            app.SaveWindow4Button.FontSize = 18;
+            app.SaveWindow4Button.FontWeight = 'bold';
+            app.SaveWindow4Button.Position = [493 134 134 29];
+            app.SaveWindow4Button.Text = 'Save Window 4';
+
+            % Create PlotPowerTestDataButton
+            app.PlotPowerTestDataButton = uibutton(app.PASSCALPowerTestReport, 'push');
+            app.PlotPowerTestDataButton.ButtonPushedFcn = createCallbackFcn(app, @PlotPowerTestDataButtonPushed, true);
+            app.PlotPowerTestDataButton.FontName = 'Times New Roman';
+            app.PlotPowerTestDataButton.FontSize = 18;
+            app.PlotPowerTestDataButton.FontWeight = 'bold';
+            app.PlotPowerTestDataButton.Position = [157 297 178 30];
+            app.PlotPowerTestDataButton.Text = 'Plot Power Test Data';
+
+            % Show the figure after all components are created
+            app.PASSCALPowerTestReport.Visible = 'on';
+        end
+    end
+
+    % App creation and deletion
+    methods (Access = public)
+
+        % Construct app
+        function app = PoweTestReport
+
+            % Create UIFigure and components
+            createComponents(app)
+
+            % Register the app with App Designer
+            registerApp(app, app.PASSCALPowerTestReport)
+
+            if nargout == 0
+                clear app
+            end
+        end
+
+        % Code that executes before app deletion
+        function delete(app)
+
+            % Delete UIFigure when app is deleted
+            delete(app.PASSCALPowerTestReport)
+        end
+    end
+end
